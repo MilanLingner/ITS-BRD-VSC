@@ -19,7 +19,7 @@ ConstByteA  EQU 0xaffe ; hier wird ConstByteA als Variable mit dem Wert 0xaffe d
 VariableA   DCW 0xbeef ; diese Variablen werden auch im Speicher abgelegt, da sie mit DCW definiert wurden. (11*16**3 + 14*16**2 + 14*16**1 + 15*16**0 = 48879 || 1011 1110 1110 1111)
 VariableB   DCW 0x1234 ; (1*16**3 + 2*16**2 + 3*16**1 + 4*16**0 = 4660 || 0001 0010 0011 0100)
 VariableC   DCW 0xaffe ; (10*16**3 + 15*16**2 + 15*16**1 + 14*16**0 = 45054 || 1010 1111 1111 1110)
-VariableD   DCW 0x0000 ; (0*16**3 + 0*16**2 + 0*16**1 + 0*16**0 = 0 || 0000 0000 0000 0000)
+VariableD   DCW 0x0000 ; (0*16**3 + 0*16**2 + 0*16**1 + 0*16**0 = 0 = 0 || 0000 0000 0000 0000)
 
 ;* We need minimal memory setup of InRootSection placed in Code Section 
     AREA  |.text|, CODE, READONLY, ALIGN = 3    ; Ka. was das heißt
@@ -45,7 +45,7 @@ main
     orr      R6, R7          ; AnwM05 
     strh     R6,[R5]         ; AnwM06 speichert den Inhalt von R6 (0x0000) als Halbwort (16 Bit) an der Adresse von VariableA, überschreibt also den ursprünglichen Wert von VariableA mit 0x0000. Da VariableA zuvor 0xaffe war, wird der Wert jetzt auf 0x0000 geändert.
 ;lösungsweg 2: mit mov und add:
-    ldr     R8,=VariableD   ; AnwM07 lädt die ADRESSE von VariableD in R8 
+    ldr     R8,=VariableD   ; AnwM07 lädt die ADRESSE von VariableD in R8 (wäre das strh am ende auch möglich ohne eine konkrete Adresse zu nennen?)
     mov     R9,#ConstByteA  ; AnwM08 lädt den Wert von ConstByteA (0xaffe) in R9. Da ConstByteA als Konstante definiert ist, wird der Wert direkt in den Register geladen, ohne dass er aus dem Speicher gelesen werden muss.
     mov     R10,#0x4eb1     ; AnwM09 lädt den Wert 0x4eb1 in R10. 
     add     R9, R9, R10     ; AnwMA addiert den Wert in R10 zu dem Wert in R9 und speichert das Ergebnis in R9. 0xaffe + 0x4eb1
