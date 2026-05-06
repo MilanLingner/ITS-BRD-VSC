@@ -27,7 +27,7 @@ VariableD   DCW 0x0000 ; (0*16**3 + 0*16**2 + 0*16**1 + 0*16**0 = 0 = 0 || 0000 
 main
     BL initITSboard             ; needed by the board to setup
 ;* swap memory - Is there another, at least optimized approach?
-    ldr     R0,=VariableA   ; Anw01 lädt die ADRESSE von VariableA into R0
+    ldr     R0,=VariableA   ; Anw01 lädt die ADRESSE dem label VariableA into R0
     ldrb    R2,[R0]         ; Anw02 load byte at address in R0 into R2 (0xef) - da ldrb nur 1 Byte lädt, wird nur das niederwertigste Byte von VariableA geladen (ef nicht be)
     ldrb    R3,[R0,#1]      ; Anw03 lädt das nächste Byte an der Adresse von VariableA in R3 (0xbe) 
     lsl     R2, #8          ; Anw04 schiebt das Byte in R2 um 8 Positionen nach links vorher 1110 1111 danach 1110 1111 0000 0000
@@ -37,6 +37,7 @@ main
 ;* const in var
     ;mov     R5,#ConstByteA  ; Anw07 lädt den Wert von ConstByteA (0xaffe) in R5. Da ConstByteA als Konstante definiert ist, wird der Wert direkt in den Register geladen, ohne dass er aus dem Speicher gelesen werden muss.
     ;strh    R5,[R0]         ; Anw08 speichert den Inhalt von R5 (0xaffe) als Halbwort (16 Bit) an der Adresse von VariableA, überschreibt also den ursprünglichen Wert von VariableA mit 0xaffe. Da VariableA zuvor 0xefbe war, wird der Wert jetzt auf 0xaffe geändert.
+
 ;Lösungsweg 1: mit ldrb und lsl:
     ldr      R5,=VariableC   ; AnwM01 lädt die ADRESSE von VariableC in R5
     ldrb     R6,[R5]         ; AnwM02 lädt das Byte an der Adresse von VariableD in R6, also den Wert 0x00. R6 enthält jetzt 0x00.
@@ -44,6 +45,7 @@ main
     ldrb     R7,[R5,#1]      ; AnwM04 lädt das nächste Byte an der Adresse von VariableD in R7, also den Wert 0x00. R7 enthält jetzt 0x00.
     orr      R6, R7          ; AnwM05 
     strh     R6,[R5]         ; AnwM06 speichert den Inhalt von R6 (0x0000) als Halbwort (16 Bit) an der Adresse von VariableA, überschreibt also den ursprünglichen Wert von VariableA mit 0x0000. Da VariableA zuvor 0xaffe war, wird der Wert jetzt auf 0x0000 geändert.
+
 ;lösungsweg 2: mit mov und add:
     ldr     R8,=VariableD   ; AnwM07 lädt die ADRESSE von VariableD in R8 (wäre das strh am ende auch möglich ohne eine konkrete Adresse zu nennen?)
     mov     R9,#ConstByteA  ; AnwM08 lädt den Wert von ConstByteA (0xaffe) in R9. Da ConstByteA als Konstante definiert ist, wird der Wert direkt in den Register geladen, ohne dass er aus dem Speicher gelesen werden muss.
@@ -57,6 +59,7 @@ main
     ldrh    R6,[R1]          ;Anw0A lädt das Halbwort (16 Bit) an der Adresse von VariableB in R6, also den Wert 0x1234. R6 enthält jetzt 0x1234.
     mov     R7, #0x30ED      ;Anw0B lädt den Wert 0x30ED in R7. 
     add     R6, R6, R7       ;Anw0C addiert den Wert in R7 (0x30ED) zu dem Wert in R6 (0x1234) und speichert das Ergebnis in R6. D+4 = 17, (gesch. als 0x11) 3+E = 17 (gesch. als 0x110), 2+0 = 2 (gesch. als 0x200), 1+3 = 4 ergibt 0x4 (gesch als 0x4000) also 0x4321
+
 ; vom bisherigen wissensstand die einfachste lösung (plus sehr viel mit Copy und Paste machbar):
     ldr     R1,=VariableB   ; AnwMC lädt die ADRESSE von VariableB in R1
     ldrh    R6,[R1]         ; AnwMD lädt das Halbwort (16 Bit) an der Adresse von VariableB in R6, also den Wert 0x1234. R6 enthält jetzt 0x1234.
