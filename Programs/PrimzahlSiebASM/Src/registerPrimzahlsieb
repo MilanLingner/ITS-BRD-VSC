@@ -1,0 +1,132 @@
+;******************** (C) COPYRIGHT HAW-Hamburg ********************************
+;* File Name          : main.s
+;* Author             : Silke Behn	
+;* Version            : V1.0
+;* Date               : 01.06.2021
+;* Description        : This is the first try to implement the Sieve of Eratosthenes in ARM assembly.
+;					  :
+;					  : Replace this main with yours.
+;
+;*******************************************************************************
+    EXTERN initITSboard
+    EXTERN lcdPrintS            ;Display ausgabe
+    EXTERN GUI_init
+;	EXTERN TP_Init
+
+;********************************************
+; Data section, aligned on 4-byte boundery
+;********************************************
+	
+	AREA MyData, DATA, align = 2
+;hier muss eine Variable für das Siebmuster angelegt werden und mit 1 gefüllt werden.
+
+VariableS FILL 64, 0xffffffff, 4		;legt ein Array mit 64 Einträgen an, die alle mit vier bytes voller einsen gefüllt sind.
+	
+
+;***********************************************
+;* Beginn des Programms *
+;************************************************
+    AREA |.text|, CODE, READONLY, ALIGN = 3
+; ----- S t a r t des Hauptprogramms -----
+                EXPORT main
+                EXTERN initITSboard
+main            PROC
+                bl    initITSboard                 ; HW Initialisieren
+
+;Algorithmus für das Sieb des Eratosthenes
+;
+;      Permanent belegte Register:
+;
+;       r0 = Zeiger für die aktuelle Primzahl
+;       r1 = Counter um Register zu diskontieren (äußerer Loop)
+;       r2 = Counter um Register zu diskontieren (innerer Loop)
+;       r3 = aktuelle Adresse des Siebmusters (äußerer Loop)
+;       r4 = aktuelle 4-byte des Siebmusters (äußerer Loop)
+;       r5 = aktuelle Adresse des Siebmusters (innerer Loop)
+;       r6 = aktuelle 4-byte des Siebmusters (innerer Loop)
+;       r7 = Zeiger für die aktuelle Addition zum ermitteln des Vielfachen einer Primzahl (innerer Loop)
+
+                mov r0, #1				
+                mov r1, #0				
+                mov r2, #0
+                ldr r3, =VariableS
+                ldr r4, [r3]
+;               ldr r5, =VariableS
+;               ldr r6, [r5]			
+
+            
+loop_outer
+                add r0, #1			        ;Zähler erhöhen, damit wir die nächste Zahl prüfen können
+                mov r7, #0                              ;Zeiger für den inneren Loop zurücksetzen  
+;1) Bedingung: der Zähler ist kleiner als die Obergrenze (1000)
+                cmp r0, #1000                           ;Vergleich mit der Obergrenze
+                bge loop_end_outer                        ;wenn r0 >= 1000, dann Ende der Schleife
+
+;2) Bedingung: der Speicher an der Stelle VariableS[r0] ist eine Primzahl.
+
+        ;2a) brauchen wir ein neues Register?
+                and r8, r0, #31		                ;entspricht r0 mod 32, da ab 32 die nächsten 4 Byte geladen werden müssen.      
+                cmp r8, #0                              ;-> der Wert von r8 wird nicht mehr gebraucht.
+                bne check_primzahl_outer                ;wenn r0 mod 32 == 0, dann müssen wir die nächsten 4 Byte laden, damit wir die richtige Zahl prüfen können.
+                STR r4, [r3]                            ;die aktuellen 4byte des Siebmusters müssen gespeichert werden
+                add r1, r2, #32                         ;der Counter für die bereits gelesenen 4byte muss um 32 erhöht werden.
+check_primzahl_outer
+        ;2b) ist die Zahl eine Primzahl? (VariableS[r0] == 1)
+
+                sub r8, r0, r1          ;nach r8 kommt der Wert von r0 - 32 *  Anzahl der bereits gelesenen 4byte, da wir sonst immer nur die ersten 32 Stellen prüfen würden.
+                mov r9, #31
+                sub r9, r9, r8          ;nach r9 kommt der Wert von 32 - (r0 - 32 * Anzahl der bereits gelesenen 4byte), da wir die 1 an die richtige Stelle schieben müssen, damit wir sie mit AND prüfen können.
+                LSL r8, r4, r9
+                LSR r8, r8, #31         
+                cmp r8, #1
+                bne loop_outer 
+        ; Vorbereitungen für den inneren Loop:
+                mov r5, r3                              ;die Adresse des Siebmusters muss für den inneren Loop gespeichert werden, damit wir die richtigen Zahlen markieren können.
+                ldr r6, [r5]                            ;die aktuellen 4byte des Siebmusters müssen für den inneren Loop gespeichert werden, damit wir die richtigen Zahlen markieren können.
+                ldr r2, [r1]
+
+;in den zweiten Loop:
+
+loop_inner
+; Berechnung der Vielfachen der Primzahl r0: r0 * (r0 + i)
+                add r8, r0, r7          ;r0 + i
+                mul r9, r0, r8          ;r0 * (r0 + i) -> r8 wird frei
+                add r7, r7, #1          ;i erhöhen
+;3) Bedingung: das Vielfache ist kleiner als die Obergrenze (1000)
+                cmp r9, #1000         
+                bge loop_outer          
+;4) Markiere das Vielfache als Nicht-Primzahl (VariableS[r9] = 0)
+        ;4a) brauchen wir ein neues Register?
+                and r8, r9, #31		;entspricht r9 mod 32, da ab 32 die nächsten 4 Byte geladen werden müssen.
+                cmp r8, #0              ;-> der Wert von r7 wird nicht mehr gebraucht.
+                bne check_primzahl_inner       ;wenn r9 mod 32 != 0, alles tutti
+                STR r6, [r5]            ;die aktuellen 4byte des Siebmusters müssen gespeichert werden
+                add r2, r2, #32         ;der Counter für die bereits gelesenen 4byte muss um 32 erhöht werden.
+                ldr r6, [r5, #4]!       ;die nächsten 4byte des Siebmusters müssen geladen werden, damit wir die richtige Zahl markieren können.
+
+        ;4b) Markiere das Vielfache als Nicht-Primzahl (VariableS[r9] = 0)
+check_primzahl_inner
+        ;hier gleiches Prinzip wie oben nur r9 statt r0.
+                sub r8, r9, r2
+                mov r10, #31
+                sub r10, r10, r8          
+                LSL r11, r6, r10          
+                LSR r11, r11, #31         
+                cmp r11, #1              
+                bne loop_outer        
+        ; jetzt allerdings muss die 1 exakt an die richtige Stelle geschoben werden.
+        ; diese ergibt sich als 32 + r2 + 1 - r9
+                mov r11, #1              ;laden der 1, die wir zum Löschen des Vielfachen verwenden
+                LSL r11, r11, r8
+                eor r6, r6, r11          ;die 1 an der Stelle des Vielfachen wird mit XOR gelöscht, da 1 XOR 1 = 0 und 0 XOR 1 = 1, also wird die Zahl an der Stelle des Vielfachen auf 0 gesetzt, wenn sie vorher eine 1 war. -> r11 wird frei
+
+                b loop_inner            ;kehrt zum Anfang des inneren Loops zurück, um das nächste Vielfache zu berechnen und zu markieren.
+
+loop_end_outer
+
+forever	b	forever		; nowhere to retun if main ends		
+		ENDP
+	
+		ALIGN
+       
+		END
