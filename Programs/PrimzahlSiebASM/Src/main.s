@@ -21,7 +21,6 @@
 ;hier muss eine Variable für das Siebmuster angelegt werden und mit 1 gefüllt werden.
 
 VariableS FILL 1001, 1, 1	            ;legt ein Array mit 1000 Einträgen an, die alle mit 1 gefüllt sind.
-	
 
 ;***********************************************
 ;* Beginn des Programms *
@@ -46,10 +45,10 @@ do_1
                 add r0, r0, #1          ;Inkrementieren von r0, um die nächste Zahl zu überprüfen
 if_1                                    ;if Bedingung: wenn der Speicher an der Stelle VariableS[r0] keine Primzahl ist, dann zurück zum Anfang der Schleife.
                 ldrb r3, [r2, r0]	    ;inhalt der aktuellen Adresse des Siebmusters in r3 laden
-                cmp r3, #0		        ;Überprüfen, ob die Zahl als Primzahl markiert ist
-then_1          
-                beq while_1             ;wenn r3 == 0, dann ist die Zahl keine Primzahl, zurück zum Anfang der Schleife
-else_1                                  ;in den zweiten Loop:
+                cmp r3, #0
+                bne then_1		        ;Überprüfen, ob die Zahl als Primzahl markiert ist
+                b endif_1              ;wenn r3 == 0, dann ist die Zahl keine Primzahl, zurück zum Anfang der Schleife
+then_1                                                      ;in den zweiten Loop:
                 MUL r4, r0, r0          ;Berechnung des Quadrats der aktuellen Primzahl, um die inneren Schleifen zu starten
 
 while_2                                 ;while Bedingung: das nächste Vielfache der aktuellen Primzahl ist kleiner als die Obergrenze (1000)
@@ -62,6 +61,7 @@ do_2
                 b while_2               ;zurück zum Anfang der inneren Schleife
 endwhile_2
 
+endif_1
             b while_1                   ;zurück zum Anfang der äußeren Schleife
 
 endwhile_1
