@@ -9,7 +9,6 @@
 ;
 ;*******************************************************************************
     EXTERN initITSboard ; Helper to organize the setup of the board
-
     EXPORT main         ; we need this for the linker
                         ;- In this context it set the entry point,too
 
@@ -17,6 +16,8 @@
 PERIPH_BASE         equ 0x40000000
 AHB1PERIPH_BASE     equ (PERIPH_BASE + 0x00020000)
 GPIOD_BASE          equ (AHB1PERIPH_BASE + 0x0C00)
+GPIOF_BASE			equ	(AHB1PERIPH_BASE + 0x1400)
+GPIO_F_PIN        	equ	(GPIOF_BASE + 0x10)
     
 GPIO_D_SET          equ (GPIOD_BASE + 0x18)
 GPIO_D_CLR          equ (GPIOD_BASE + 0x1A)
@@ -45,8 +46,14 @@ main
 ;    STRB    R1, [R6]    ; switch on LED D09
 ;    STRB    R2, [R7]    ; switch off LED D14
 ;    STRB    R3, [R7]    ; switch off LED D15
-    STRB    R4, [R6]    ; switch on LED D08 and D09
-    b .
+while_endless
+    ldr		r1,=GPIO_F_PIN
+	ldrh	r1,[r1]
+	and		r1,#0xFF
+    eor     r1,#0xFF
+    lsr     r4,r1,#7
+;    STRB    R4, [R6]    ; switch on LED D08 and D09
+    b while_endless
     
     ALIGN
     END
