@@ -115,8 +115,11 @@ if_hold_end
 
 init
 	push	{lr}
+	ldr		r6,=GPIO_D_CLR
+	mov     r0,#0xff
+	strb	r0,[r6]
 if_i
-	and		r4,r1,#0x80
+	and		r4,r1,#0xA0
 	cmp		r4,#0x80
 	bne		if_i_end
 then_i
@@ -126,6 +129,9 @@ then_i
 	mov		r0, #1
 	ldr		r6,=TIM2_ERG			
 	strb	R0,[R6]	
+	ldr		r6,=GPIO_D_SET
+	mov     r0,#0x01
+	strb	r0,[r6]
 if_i_end
 	; Print zeit
 	ldr 	r0,=MY_TEXT
@@ -145,6 +151,9 @@ then_r_hold
 	mov		R0,#2
 	ldr		R6,=Zustand
 	strb	R0,[R6]				; Zustand = 2 (hold)
+	ldr		r6,=GPIO_D_SET
+	mov     r0,#0x02
+	strb	r0,[r6]
 	b 		if_r_end
 elif_r_init
 	and		r4,r1,#0x20
@@ -166,13 +175,16 @@ if_r_end
 hold
 	push	{lr}
 if_h_running
-	and		r4,r1,#0x80
+	and		r4,r1,#0xC0
 	cmp		r4,#0x80
 	bne		elif_h_init
 then_h_running
 	mov		R0,#1
 	ldr		R6,=Zustand
 	strb	R0,[R6]				; Zustand = 1 (running)
+	ldr		r6,=GPIO_D_CLR
+	mov     r0,#0x02
+	strb	r0,[r6]
 	bl	if_h_end
 elif_h_init
 	and		r4,r1,#0x20
