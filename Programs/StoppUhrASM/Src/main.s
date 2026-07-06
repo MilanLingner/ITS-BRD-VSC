@@ -26,7 +26,9 @@ TIMER				equ (TIM2_BASE + 0x24)   ; CNT : current time stamp (32 bit),  resoluti
 TIM2_PSC			equ (TIM2_BASE + 0x28)   ; Prescaler  resolution
 TIM2_ERG			equ (TIM2_BASE + 0x14)   ; 16 Bit register, Bit 0 : 1 Restart Timer
 	
-
+STATE_INIT equ  0
+STATE_RUNNING equ 1
+STATE_HOLD equ 2
 
     EXTERN initITSboard
     EXTERN GUI_init
@@ -83,27 +85,27 @@ superloop
 		ldr 	r4,=Zustand
 		ldrb	r4,[r4]
 	;check buttons
-		ldr		r1,=GPIO_F_PIN
-		ldrh	r1,[r1]
-		and		r1,#0xFF
-		eor		r1,r1,#0xFF
+		ldr		r0,=GPIO_F_PIN
+		ldrh	r0,[r0]
+		and		r0,#0xFF
+		eor		r0,r0,#0xFF
 	;do Zustand
 if_init
-		cmp		r4,#0
+		cmp		r4,#STATE_INIT
 		bne		if_init_end
 then_init	
 		bl		init
 if_init_end
 
 if_running
-		cmp		r4,#1
+		cmp		r4,#STATE_RUNNING
 		bne		if_running_end
 then_running
 		bl		running
 if_running_end
 		;hold?
 if_hold
-		cmp		r4,#2
+		cmp		r4,#STATE_HOLD
 		bne		if_hold_end
 then_hold
 		bl		hold
@@ -114,12 +116,12 @@ if_hold_end
 ;----------------------init----------------------
 
 init
-	push	{lr}
+	push	{lr, r4, r6}
 	ldr		r6,=GPIO_D_CLR
-	mov     r0,#0xff
-	strb	r0,[r6]
+	mov     r1,#0xff
+	strb	r1,[r6]
 if_i
-	and		r4,r1,#0xA0
+	and		r4,r0,#0xA0
 	cmp		r4,#0x80
 	bne		if_i_end
 then_i
@@ -136,15 +138,15 @@ if_i_end
 	; Print zeit
 	ldr 	r0,=MY_TEXT
 	bl 		print
-	pop		{lr}
+	pop		{lr, r4, r6}
 	BX		lr
 
 ;----------------------running----------------------
 
 running
-	push	{lr}
+	push	{lr, r4, r6}
 if_r_hold
-	and		r4,r1,#0x40
+	and		r4,r0,#0x40
 	cmp		r4,#0x40
 	bne		elif_r_init
 then_r_hold
@@ -156,7 +158,7 @@ then_r_hold
 	strb	r0,[r6]
 	b 		if_r_end
 elif_r_init
-	and		r4,r1,#0x20
+	and		r4,r0,#0x20
 	cmp		r4,#0x20
 	bne		if_r_end
 then_r_init
@@ -167,15 +169,15 @@ if_r_end
 	; Print zeit
 	bl calTime
 	bl print
-	pop		{lr}
+	pop		{lr, r4, r6}
 	BX		lr
 
 ;----------------------hold----------------------
 
 hold
-	push	{lr}
+	push	{lr, r4, r5, r6}
 if_h_running
-	and		r4,r1,#0xC0
+	and		r4,r0,#0xC0
 	cmp		r4,#0x80
 	bne		elif_h_init
 then_h_running
@@ -187,7 +189,7 @@ then_h_running
 	strb	r0,[r6]
 	bl	if_h_end
 elif_h_init
-	and		r4,r1,#0x20
+	and		r4,r0,#0x20
 	cmp		r4,#0x20
 	bne		if_h_end
 then_h_init
@@ -195,13 +197,13 @@ then_h_init
 	ldr		R6,=Zustand
 	strb	R5,[R6]				; Zustand = 0 (init)
 if_h_end
-	pop		{lr}
+	pop		{lr, r4, r5, r6}
 	BX		lr
 	
 ;----------------------calTime----------------------
 
 calTime
-	push	{lr}
+	push	{lr, r3, r4, r5, r6, r7}
 	ldr		r4,=TIMER
 	ldr		r4,[r4]				; Aktueller Timerstand in r4
 	ldr		r7,=TimeDiv			; Array mit den Timerständen
@@ -234,13 +236,13 @@ if_calTime_end
 	bl 		for_calTime
 endfor_calTime
 	ldr		r0,=TIMER_AT
-	pop		{lr}
+	pop		{lr, r3, r4, r5, r6, r7}
 	BX		lr
 
 ;-----------------------div----------------------
 
 div
-	push {lr}
+	push {lr, r2}
 	mov r2, #0
 for_div
 	cmp r0, r1
@@ -251,13 +253,13 @@ do_div
 	b for_div
 endfor_div
 	mov r1, r2
-	pop {lr}
+	pop {lr, r2}
 	BX lr
 
 ;----------------------print----------------------
 
 print
-	push	{lr}
+	push	{lr, r3, r4, r5, r6, r7}
 	mov		r4, r0
 	ldr 	r5,=TIMER_OLD
 	mov 	r6, #1
@@ -285,7 +287,7 @@ endif_print
 	bl lcdGotoXY
 	b while_print
 end_while_print
-	pop {lr}
+	pop {lr, r3, r4, r5, r6, r7}
 	bx	lr
 	
 
