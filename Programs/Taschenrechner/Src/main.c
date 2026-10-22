@@ -7,34 +7,47 @@
  */
 /* Includes ------------------------------------------------------------------*/
 
+#include "exception.h"
 #include "scanner.h"
 #include "display.h"
 #include "keypad.h"
 #include "token.h"
 #include "stack.h"
-#include "scanner.h"
+#include "functions.h"
+
 
 
 
 int main(void) {
    init_display();
-   make_keypad();
+   makeKeyPad();
    while (true) {
-      T_token ein = nextToken();
+      T_token ein = next_token();
       switch(ein.tok) {
          case NUMBER:
-            ifpush();
+            if(push()){
+               return OVERFLOW;
+            }
+            break;
          case PLUS:
-            plus();
+            if(plus()){
+               return UNDERFLOW;
+            }
             break;       
          case MINUS:  
-            minus();
+            if(minus()){
+               return UNDERFLOW;
+            }
             break;    
          case MULT:  
-            mult();
+            if(mult()){
+               return UNDERFLOW;
+            }
             break;     
          case DIV:  
-            div();
+            if(div()){
+               return UNDERFLOW;
+            }
             break;
          case PRT:
             print();

@@ -1,15 +1,15 @@
 /**
- * @file token.h
- * @author Franz Korf, HAW Hamburg
- * @date Mar 2016
- * @brief This file stores all token returned by the scanner.
+ * @file exceptions.h
+ * @author Milan Lingner, HAW Hamburg
+ * @date Oct 2026
+ * @brief This file stores the "magic numbers" used for Exceptions in the Stack
  */
 
-#ifndef EXC_H
-#define EXC_H
+#ifndef EXCEPTIONS_H
+#define EXCEPTIONS_H
 
-#define STACK_OVERFLOW_EXCEPTION 1     //!< Token for an int number
-#define STACK_UNDERFLOW_EXCEPTION 2       //!< Token for + operator
-#define INT_OVERFLOW_EXCEPTION   3  //!< Token for - operator
+#define OVERFLOW 1     //!< Token for an int number
+#define UNDERFLOW 2       //!< Token for + operator
+#define INT_OVERFLOW   3  //!< Token for - operator
 
 #endif
