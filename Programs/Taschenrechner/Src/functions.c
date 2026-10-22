@@ -72,6 +72,16 @@ int printAll(){
     print_stdout(char *erg);
     return 0;
 }
-int swap();
-int clear();
+int swap(){
+    int first = pop();
+    int second = pop();
+    int a = 0;
+    if(int a = push(second)){
+        return  push(first);
+    }
+    return 
+}
+int clear(){
+    clear_stack();
+}
 
