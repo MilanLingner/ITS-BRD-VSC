@@ -68,18 +68,16 @@ int printAll(){
     if(getPointer() < 2){
         return UNDERFLOW;
     }
-    
     for(int i = 0; i < 3; i++){
-
+        print_stdout((char*)&getItem(getPointer())-i);
     }
-    print_stdout(char *erg);
     return 0;
 }
 int swap(){
     int first = pop();
     int second = pop();
     int a = 0;
-    if(int a = push(second)){
+    if(a = push(second)){
         return  push(first);
     }
     return 

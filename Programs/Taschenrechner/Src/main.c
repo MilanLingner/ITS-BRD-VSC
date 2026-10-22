@@ -50,18 +50,29 @@ int main(void) {
             }
             break;
          case PRT:
+            if(print()){
+               return UNDERFLOW;
+            }
             print();
             break;
          case SWAP:
+            if(swap()){
+               return UNDERFLOW;
+            }
             swap();
             break;
          case PRT_ALL:
-            printAll();
+            if(print_all()){
+               return UNDERFLOW;
+            }
             break;
          case CLEAR:
             clear();
             break;
          case DOUBLE:
+            if(div()){
+               return OVERFLOW;
+            }
             doppeln();
             break;
          case UNEXPECTED:
